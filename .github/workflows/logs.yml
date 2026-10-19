@@ -1,0 +1,33 @@
+name: Guardar registro de errores
+
+on:
+  workflow_run:
+    workflows: ["Android (APK de prueba y AAB para Play Store)", "Web (enlace para probar en cualquier teléfono)"]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  save:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Descargar registro y guardarlo en la rama ci-logs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir out && cd out
+          gh run view "$RUN_ID" -R "$REPO" --log-failed > failed.log 2>&1 || true
+          if [ ! -s failed.log ]; then gh run view "$RUN_ID" -R "$REPO" --log > failed.log 2>&1 || true; fi
+          tail -c 200000 failed.log > last.log
+          echo "run $RUN_ID" > info.txt
+          git init -q -b ci-logs
+          git config user.name "lumi-ci"
+          git config user.email "lumi-ci@users.noreply.github.com"
+          git add -A
+          git commit -qm "log $RUN_ID"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" ci-logs

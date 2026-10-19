@@ -14,10 +14,10 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Descargar el proyecto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Publicar www en la rama gh-pages
         uses: peaceiris/actions-gh-pages@v4
