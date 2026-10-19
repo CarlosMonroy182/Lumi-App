@@ -1,0 +1,15 @@
+{
+  "appId": "com.lumikids.aprende",
+  "appName": "Lumi",
+  "webDir": "www",
+  "backgroundColor": "#efe7ff",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#efe7ff"
+  }
+}
