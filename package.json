@@ -1,0 +1,24 @@
+{
+  "name": "lumi-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lumi - app educativa bilingüe para niños de 1.5 a 3 años",
+  "scripts": {
+    "sync": "cap sync",
+    "android": "cap sync android && cap open android",
+    "ios": "cap sync ios && cap open ios",
+    "assets": "capacitor-assets generate --iconBackgroundColor '#8b5cf6' --splashBackgroundColor '#efe7ff'"
+  },
+  "dependencies": {
+    "@capacitor-community/text-to-speech": "8.0.2",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
+    "cordova-plugin-purchase": "13.19.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.3"
+  }
+}
