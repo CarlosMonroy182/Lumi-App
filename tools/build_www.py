@@ -1,6 +1,8 @@
 import base64,hashlib,json,os,re,sys
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC=sys.argv[1] if len(sys.argv)>1 else os.path.join(ROOT,'src','lumi.html')
+ARGS=[a for a in sys.argv[1:] if not a.startswith('--')]
+TESTER='--tester' in sys.argv
+SRC=ARGS[0] if ARGS else os.path.join(ROOT,'src','lumi.html')
 FONTS=os.path.join(ROOT,'src','fonts')
 h=open(SRC,encoding='utf-8').read()
 def ff(fam,w,f):
@@ -29,7 +31,7 @@ head=f'''<!doctype html>
 <style>[hidden]{{display:none!important}}html,body{{background:#fff8ef}}</style>
 </head>
 <body>
-'''
+'''+('<script>window.LUMI_TESTER=1</script>\n' if TESTER else '')
 tail=f'''
 <script>
 (function(){{var nat=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
