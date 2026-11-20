@@ -777,6 +777,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .gridzone.story{display:flex;flex-direction:column;gap:12px;bottom:16px}
 .sill{flex:0 1 auto;width:100%;aspect-ratio:4/3;max-height:100%;margin:auto 0;min-height:0;border:0;padding:0;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 0 0 5px #fff,0 0 0 8px #e8c46a,0 8px 0 8px rgba(62,42,134,.15);cursor:pointer}
 .sill svg{width:100%;height:100%;display:block}
+.tn{transform-box:fill-box;transform-origin:50% 100%}.tn.pop{animation:tnpop .5s var(--spring)}@keyframes tnpop{40%{transform:scale(1.12)}}
 .stext{flex:none;background:var(--paper);border-radius:22px;padding:12px 18px;box-shadow:0 6px 0 rgba(45,42,58,.12);font:700 clamp(18px,4.8cqw,26px)/1.3 var(--display);color:var(--plum);text-align:center}
 .snav{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sbtn{width:64px;height:64px;border-radius:50%;border:0;background:var(--purple);box-shadow:0 5px 0 #6a3fd6;display:grid;place-items:center;cursor:pointer}
@@ -1563,6 +1564,8 @@ window.addEventListener('orientationchange',()=>setTimeout(refit,300));
 
 function capPlugin(n){try{const C=window.Capacitor;if(!C||!C.isNativePlatform||!C.isNativePlatform())return null;return (C.Plugins&&C.Plugins[n])||(C.registerPlugin?C.registerPlugin(n):null);}catch(e){return null;}}
 const NTTS=capPlugin('TextToSpeech');
+const KIOSK=capPlugin('Kiosk');
+function kiosk(on){try{if(KIOSK)Promise.resolve(on?KIOSK.lock():KIOSK.unlock()).catch(()=>{});}catch(e){}}
 class NUtt{constructor(t){this.text=t;this.lang='';this.rate=1;this.pitch=1;this.volume=1;this.voice=null;}}
 function nativeSynth(T){
   const q=[],L={};let cur=null,gen=0,vs=[];
@@ -1727,7 +1730,7 @@ function enterChild(greet){
   renderHome();
   if(S.pin)openSection(S.pin);else show('home');
   if(greet){const n=S.nick?', '+S.nick:'';say(seqOf('¡Hola'+n+'!','Hi'+n+'!'));}
-  startTimer();
+  startTimer();kiosk(1);
 }
 
 const MAGIC={
@@ -2818,7 +2821,7 @@ function syncPanel(){
   else loadVoices();
 }
 function diagText(){const st=guard.stats;return `Lumi · ${navigator.userAgent}\nToques ignorados → mano/varios dedos: ${st.palm}, contacto grande: ${st.big}, mientras habla: ${st.talk}, muy rápidos: ${st.rate}\nVelocidad de voz: ${S.rate}\n\n`+(DIAG.length?DIAG.join('\n'):'(sin eventos)');}
-function openPanel(){try{$('pDiag').textContent=diagText();}catch(e){}try{updPay();$('payNote').textContent='';}catch(e){}clearTimeout(timerId);syncPanel();fsLabel();try{renderMediaLists();}catch(e){}$('panel').hidden=false;}
+function openPanel(){try{$('pDiag').textContent=diagText();}catch(e){}try{updPay();$('payNote').textContent='';}catch(e){}clearTimeout(timerId);kiosk(0);syncPanel();fsLabel();try{renderMediaLists();}catch(e){}$('panel').hidden=false;}
 [['pPrimary','primary',v=>v],['pStage','stage',v=>+v],['pMode','mode',v=>v],['pStyle','style',v=>v]].forEach(([id,key,cv])=>{
   $(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
     S[key]=cv(b.dataset.v);setPressed($(id),S[key]);
@@ -2867,7 +2870,7 @@ function savePanel(){
   else if(['animals','colors','music','paint','numbers','abc','emotions','soon'].includes(current)||REGS[current]){
     if(cur&&available(cur)&&unlocked(cur))openSection(cur.id);else show('home');
   } else show('home');
-  startTimer();
+  startTimer();kiosk(1);
   const tt=$('toast');tt.textContent='✓ '+t('saved');tt.hidden=false;clearTimeout(tt._t);tt._t=setTimeout(()=>tt.hidden=true,1800);
 }
 $('closeBtn').addEventListener('click',savePanel);
@@ -3833,53 +3836,60 @@ const SB={
 };
 const GY=226;
 const on=(svg,x,foot,s,flip,gy)=>SB.at(svg,x,(gy||GY)-foot*s,s,flip);
-const tree2=(x,s)=>BG.tree(x,GY-30*s,s,'#4fb36a');
+const TAGN=(es,en,svg)=>`<g class="tn" data-n="${es}|${en}">${svg}</g>`;
+const tree2=(x,s)=>TAGN('árbol','tree',BG.tree(x,GY-30*s,s,'#4fb36a'));
 const henFace=()=>`<path d="M74 52 Q78 30 92 40 Q98 22 110 38 Q122 28 124 52Z" fill="#c0392b" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><circle cx="100" cy="100" r="58" fill="#e4574f" stroke="${INK}" stroke-width="4"/>${eye(80,90)}${eye(120,90)}<path d="M88 112 L112 112 L100 132Z" fill="#ffd23f" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M96 132 Q100 152 106 134" fill="#c0392b" stroke="${INK}" stroke-width="3"/>${cheeks(118,40)}`;
 const hen=()=>bird(henFace,{c:'#e4574f',c2:'#c0392b',legs:1,hs:.5,hx:18,hy:28});
 const wolfB=()=>quad(()=>SB.wolf(),{c:'#9c9aac',tail:'fluffy',tc:'#e9e6f0',belly:'#e9e6f0',hs:.6,hy:2});
 const gArm=(x1,x2)=>`<path d="M${x1} 132 Q${(x1+x2)/2+(x2<100?-6:6)} 170 ${x2} 204" stroke="${INK}" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M${x1} 132 Q${(x1+x2)/2+(x2<100?-6:6)} 170 ${x2} 204" stroke="#f2c49b" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M${x1} 132 L${x1+(x2-x1)*.3} 150" stroke="#4a90ff" stroke-width="14" stroke-linecap="round"/><circle cx="${x2}" cy="206" r="9" fill="#f2c49b" stroke="${INK}" stroke-width="3.5"/>`;
 const girlFull=(o)=>`${gArm(60,38)}${gArm(140,162)}<g transform="translate(25 0) scale(.75)">${person(Object.assign({back:'pig',front:'long',hair:'#ffd23f',shirt:'#4a90ff'},o||{}))}</g><path d="M62 150 L138 150 L156 236 H44 Z" fill="#4a90ff" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M48 226 H152" stroke="#ffd23f" stroke-width="5"/><rect x="74" y="236" width="18" height="44" rx="8" fill="url(#gSkin)" stroke="${INK}" stroke-width="4"/><rect x="108" y="236" width="18" height="44" rx="8" fill="url(#gSkin)" stroke="${INK}" stroke-width="4"/><ellipse cx="80" cy="286" rx="16" ry="8" fill="#ff5a5a" stroke="${INK}" stroke-width="4"/><ellipse cx="120" cy="286" rx="16" ry="8" fill="#ff5a5a" stroke="${INK}" stroke-width="4"/>`;
-const table=(x,w)=>`<rect x="${x-w/2}" y="${GY-64}" width="${w}" height="12" rx="4" fill="#c98a4b" stroke="${INK}" stroke-width="4"/><path d="M${x-w/2+12} ${GY-52} V${GY} M${x+w/2-12} ${GY-52} V${GY}" stroke="${INK}" stroke-width="8" stroke-linecap="round"/>`;
+const table=(x,w)=>TAGN('mesa','table',tableS(x,w));
+const tableS=(x,w)=>`<rect x="${x-w/2}" y="${GY-64}" width="${w}" height="12" rx="4" fill="#c98a4b" stroke="${INK}" stroke-width="4"/><path d="M${x-w/2+12} ${GY-52} V${GY} M${x+w/2-12} ${GY-52} V${GY}" stroke="${INK}" stroke-width="8" stroke-linecap="round"/>`;
+[['straw','casa de paja','straw house'],['wood','casa de madera','wooden house'],['brick','casa de ladrillos','brick house'],['bowl','plato','bowl'],['chair','silla','chair'],['bed','cama','bed'],['swan','cisne','swan'],['wheat','trigo','wheat'],['bread','pan','bread'],['lake','lago','lake'],['finish','bandera','flag'],['wind','viento','wind'],['snow','nieve','snow']].forEach(([k,es,en])=>{const f=SB[k];SB[k]=(...a)=>TAGN(es,en,f(...a));});
 const F={quad:86,bunny:92,duck:68,hen:86,turtle:72,girl:194,swan:76,house:90,chair:88,bed:80,bowl:62,flag:90,wheat:90,bread:54};
 const STORIES=[
- {id:'pigs',es:'Los tres cerditos',en:'The Three Little Pigs',c:'#ffe1ea',cover:()=>SB.at(BODY_OF.Cerdo(),100,110,.9),pages:[
-  ['Había una vez tres cerditos que querían construir su casa.','Once upon a time, three little pigs wanted to build their houses.',()=>SB.sky()+tree2(360,1.1)+on(BODY_OF.Cerdo(),90,F.quad,.55)+on(BODY_OF.Cerdo(),200,F.quad,.6,1)+on(BODY_OF.Cerdo(),305,F.quad,.55,1)],
-  ['El primero hizo una casa de paja.','The first one built a house of straw.',()=>SB.sky()+on(SB.straw(),260,F.house,.9)+on(BODY_OF.Cerdo(),90,F.quad,.55)],
-  ['El segundo hizo una casa de madera.','The second one built a house of wood.',()=>SB.sky()+on(SB.wood(),260,F.house,.9)+on(BODY_OF.Cerdo(),90,F.quad,.55)],
-  ['El tercero hizo una casa de ladrillos, muy fuerte.','The third one built a very strong house of bricks.',()=>SB.sky()+on(SB.brick(),260,F.house,.9)+on(BODY_OF.Cerdo(),90,F.quad,.55)],
-  ['Llegó el lobo y sopló y sopló… ¡fuuu!','The wolf came and huffed and puffed… whoosh!',()=>SB.sky('#d6e4f5')+on(SB.straw(),310,F.house,.7)+on(wolfB(),100,F.quad,.75)+SB.at(SB.wind(),220,150,.7)],
-  ['Pero la casa de ladrillos no se cayó. ¡Los cerditos estaban a salvo!','But the brick house did not fall. The pigs were safe!',()=>SB.sky()+on(SB.brick(),200,F.house,1)+on(BODY_OF.Cerdo(),70,F.quad,.45)+on(BODY_OF.Cerdo(),330,F.quad,.45,1)+on(wolfB(),380,F.quad,.3,1)]]},
+ {id:'pigs',es:'Los tres cerditos',en:'The Three Little Pigs',c:'#ffe1ea',cover:()=>SB.at(TAGN('cerdo','pig',BODY_OF.Cerdo()),100,110,.9),pages:[
+  ['Había una vez tres cerditos que querían construir su casa.','Once upon a time, three little pigs wanted to build their houses.',()=>SB.sky()+tree2(360,1.1)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),90,F.quad,.55)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),200,F.quad,.6,1)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),305,F.quad,.55,1)],
+  ['El primero hizo una casa de paja.','The first one built a house of straw.',()=>SB.sky()+on(SB.straw(),260,F.house,.9)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),90,F.quad,.55)],
+  ['El segundo hizo una casa de madera.','The second one built a house of wood.',()=>SB.sky()+on(SB.wood(),260,F.house,.9)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),90,F.quad,.55)],
+  ['El tercero hizo una casa de ladrillos, muy fuerte.','The third one built a very strong house of bricks.',()=>SB.sky()+on(SB.brick(),260,F.house,.9)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),90,F.quad,.55)],
+  ['Llegó el lobo y sopló y sopló… ¡fuuu!','The wolf came and huffed and puffed… whoosh!',()=>SB.sky('#d6e4f5')+on(SB.straw(),310,F.house,.7)+on(TAGN('lobo','wolf',wolfB()),100,F.quad,.75)+SB.at(SB.wind(),220,150,.7)],
+  ['Pero la casa de ladrillos no se cayó. ¡Los cerditos estaban a salvo!','But the brick house did not fall. The pigs were safe!',()=>SB.sky()+on(SB.brick(),200,F.house,1)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),70,F.quad,.45)+on(TAGN('cerdo','pig',BODY_OF.Cerdo()),330,F.quad,.45,1)+on(TAGN('lobo','wolf',wolfB()),380,F.quad,.3,1)]]},
  {id:'bears',es:'Ricitos de Oro',en:'Goldilocks',c:'#fff1dc',cover:()=>SB.at(SB.girl(),100,100,.95),pages:[
-  ['Había una vez tres osos que vivían en el bosque.','Once upon a time, three bears lived in the forest.',()=>SB.sky()+tree2(40,1.2)+tree2(370,1.1)+on(BODY_OF.Oso(),120,F.quad,.7)+on(BODY_OF.Oso(),240,F.quad,.55,1)+on(BODY_OF.Oso(),330,F.quad,.4,1)],
-  ['Una niña llamada Ricitos de Oro entró a su casita.','A girl named Goldilocks went into their little house.',()=>SB.sky()+on(SB.wood(),270,F.house,.95)+on(girlFull(),100,F.girl,.5)],
-  ['Probó tres platos de avena. ¡El pequeño estaba perfecto!','She tasted three bowls of porridge. The little one was just right!',()=>SB.sky('#ffe9d6','#d9a066')+table(200,320)+on(SB.bowl('#a0673b'),100,F.bowl,.6,0,GY-64)+on(SB.bowl('#ff9a3c'),200,F.bowl,.48,0,GY-64)+on(SB.bowl('#ff8fc8'),290,F.bowl,.36,0,GY-64)+on(girlFull(),352,F.girl,.42)],
-  ['Se sentó en tres sillas. ¡La pequeña era perfecta!','She sat in three chairs. The little one was just right!',()=>SB.sky('#ffe9d6','#d9a066')+on(SB.chair('#8a5a3c'),80,F.chair,.8)+on(SB.chair('#4a90ff'),200,F.chair,.6)+on(SB.chair('#ff8fc8'),310,F.chair,.45)+on(girlFull(),352,F.girl,.36)],
-  ['Se quedó dormida en la camita del osito.','She fell asleep in the little bear\'s bed.',()=>SB.sky('#2b1f66','#d9a066')+on(SB.bed('#ff8fc8'),200,F.bed,1.1)+`<g transform="translate(160 160) rotate(-90) scale(.42) translate(-100 -64)">${girlFull({sleep:1})}</g><path d="M184 134 Q182 126 190 126 H270 Q278 126 278 134 V202 H184 Z" fill="#ffb3d1" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M196 146 h70 M196 162 h70 M196 178 h70" stroke="#fff" stroke-width="4" stroke-dasharray="6 8"/>`+`<g class="zz"><text x="260" y="110" font-size="40" font-weight="800" fill="#cdb8ff" font-family="Grandstander,sans-serif">Z z</text></g>`],
-  ['Los osos volvieron. Ricitos de Oro pidió perdón y se hicieron amigos.','The bears came home. Goldilocks said sorry and they became friends.',()=>SB.sky()+tree2(370,1)+on(BODY_OF.Oso(),90,F.quad,.6)+on(BODY_OF.Oso(),190,F.quad,.46)+on(girlFull(),290,F.girl,.5)]]},
- {id:'race',es:'La liebre y la tortuga',en:'The Tortoise and the Hare',c:'#e3f7d6',cover:()=>SB.at(DRAW.turtle(),100,110,.9),pages:[
-  ['La liebre era muy rápida y se reía de la tortuga.','The hare was very fast and laughed at the tortoise.',()=>SB.sky()+tree2(370,1)+on(BODY_OF.Conejo(),110,F.bunny,.7)+on(DRAW.turtle(),270,F.turtle,.65)],
-  ['¡Hagamos una carrera!, dijo la tortuga.','"Let\'s have a race!" said the tortoise.',()=>SB.sky()+on(SB.finish(),340,F.flag,.8)+on(BODY_OF.Conejo(),100,F.bunny,.6)+on(DRAW.turtle(),210,F.turtle,.6)],
-  ['La liebre corrió tan rápido que se sentó a descansar… y se durmió.','The hare ran so fast that she sat down to rest… and fell asleep.',()=>SB.sky()+tree2(270,1.4)+on(BODY_OF.Conejo(),230,F.bunny,.6)+`<g class="zz"><text x="270" y="130" font-size="36" font-weight="800" fill="#8b5cf6" font-family="Grandstander,sans-serif">Z z</text></g>`],
-  ['La tortuga siguió caminando, paso a pasito.','The tortoise kept walking, step by step.',()=>SB.sky()+tree2(60,1)+on(DRAW.turtle(),220,F.turtle,.8)+`<path d="M90 ${GY-10} h30 M70 ${GY-2} h40" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`],
-  ['¡La tortuga ganó la carrera!','The tortoise won the race!',()=>SB.sky()+on(SB.finish(),230,F.flag,.9)+on(DRAW.turtle(),250,F.turtle,.7)+[[80,60],[320,60],[200,30]].map(([x,y])=>`<polygon points="${starPts5(x,y,16,7)}" fill="#ffd23f" stroke="${INK}" stroke-width="2"/>`).join('')],
-  ['Despacito y sin parar, se puede llegar.','Slow and steady wins the race.',()=>SB.sky()+on(DRAW.turtle(),130,F.turtle,.65)+on(BODY_OF.Conejo(),280,F.bunny,.6,1)]]},
+  ['Había una vez tres osos que vivían en el bosque.','Once upon a time, three bears lived in the forest.',()=>SB.sky()+tree2(40,1.2)+tree2(370,1.1)+on(TAGN('oso','bear',BODY_OF.Oso()),120,F.quad,.7)+on(TAGN('oso','bear',BODY_OF.Oso()),240,F.quad,.55,1)+on(TAGN('oso','bear',BODY_OF.Oso()),330,F.quad,.4,1)],
+  ['Una niña llamada Ricitos de Oro entró a su casita.','A girl named Goldilocks went into their little house.',()=>SB.sky()+on(SB.wood(),270,F.house,.95)+on(TAGN('Ricitos de Oro','Goldilocks',girlFull()),100,F.girl,.5)],
+  ['Probó tres platos de avena. ¡El pequeño estaba perfecto!','She tasted three bowls of porridge. The little one was just right!',()=>SB.sky('#ffe9d6','#d9a066')+table(200,320)+on(SB.bowl('#a0673b'),100,F.bowl,.6,0,GY-64)+on(SB.bowl('#ff9a3c'),200,F.bowl,.48,0,GY-64)+on(SB.bowl('#ff8fc8'),290,F.bowl,.36,0,GY-64)+on(TAGN('Ricitos de Oro','Goldilocks',girlFull()),352,F.girl,.42)],
+  ['Se sentó en tres sillas. ¡La pequeña era perfecta!','She sat in three chairs. The little one was just right!',()=>SB.sky('#ffe9d6','#d9a066')+on(SB.chair('#8a5a3c'),80,F.chair,.8)+on(SB.chair('#4a90ff'),200,F.chair,.6)+on(SB.chair('#ff8fc8'),310,F.chair,.45)+on(TAGN('Ricitos de Oro','Goldilocks',girlFull()),352,F.girl,.36)],
+  ['Se quedó dormida en la camita del osito.','She fell asleep in the little bear\'s bed.',()=>SB.sky('#2b1f66','#d9a066')+on(SB.bed('#ff8fc8'),200,F.bed,1.1)+`<g transform="translate(160 160) rotate(-90) scale(.42) translate(-100 -64)">${TAGN('Ricitos de Oro','Goldilocks',girlFull({sleep:1}))}</g><path d="M184 134 Q182 126 190 126 H270 Q278 126 278 134 V202 H184 Z" fill="#ffb3d1" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M196 146 h70 M196 162 h70 M196 178 h70" stroke="#fff" stroke-width="4" stroke-dasharray="6 8"/>`+`<g class="zz"><text x="260" y="110" font-size="40" font-weight="800" fill="#cdb8ff" font-family="Grandstander,sans-serif">Z z</text></g>`],
+  ['Los osos volvieron. Ricitos de Oro pidió perdón y se hicieron amigos.','The bears came home. Goldilocks said sorry and they became friends.',()=>SB.sky()+tree2(370,1)+on(TAGN('oso','bear',BODY_OF.Oso()),90,F.quad,.6)+on(TAGN('oso','bear',BODY_OF.Oso()),190,F.quad,.46)+on(TAGN('Ricitos de Oro','Goldilocks',girlFull()),290,F.girl,.5)]]},
+ {id:'race',es:'La liebre y la tortuga',en:'The Tortoise and the Hare',c:'#e3f7d6',cover:()=>SB.at(TAGN('tortuga','tortoise',DRAW.turtle()),100,110,.9),pages:[
+  ['La liebre era muy rápida y se reía de la tortuga.','The hare was very fast and laughed at the tortoise.',()=>SB.sky()+tree2(370,1)+on(TAGN('liebre','hare',BODY_OF.Conejo()),110,F.bunny,.7)+on(TAGN('tortuga','tortoise',DRAW.turtle()),270,F.turtle,.65)],
+  ['¡Hagamos una carrera!, dijo la tortuga.','"Let\'s have a race!" said the tortoise.',()=>SB.sky()+on(SB.finish(),340,F.flag,.8)+on(TAGN('liebre','hare',BODY_OF.Conejo()),100,F.bunny,.6)+on(TAGN('tortuga','tortoise',DRAW.turtle()),210,F.turtle,.6)],
+  ['La liebre corrió tan rápido que se sentó a descansar… y se durmió.','The hare ran so fast that she sat down to rest… and fell asleep.',()=>SB.sky()+tree2(270,1.4)+on(TAGN('liebre','hare',BODY_OF.Conejo()),230,F.bunny,.6)+`<g class="zz"><text x="270" y="130" font-size="36" font-weight="800" fill="#8b5cf6" font-family="Grandstander,sans-serif">Z z</text></g>`],
+  ['La tortuga siguió caminando, paso a pasito.','The tortoise kept walking, step by step.',()=>SB.sky()+tree2(60,1)+on(TAGN('tortuga','tortoise',DRAW.turtle()),220,F.turtle,.8)+`<path d="M90 ${GY-10} h30 M70 ${GY-2} h40" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`],
+  ['¡La tortuga ganó la carrera!','The tortoise won the race!',()=>SB.sky()+on(SB.finish(),230,F.flag,.9)+on(TAGN('tortuga','tortoise',DRAW.turtle()),250,F.turtle,.7)+[[80,60],[320,60],[200,30]].map(([x,y])=>`<polygon points="${starPts5(x,y,16,7)}" fill="#ffd23f" stroke="${INK}" stroke-width="2"/>`).join('')],
+  ['Despacito y sin parar, se puede llegar.','Slow and steady wins the race.',()=>SB.sky()+on(TAGN('tortuga','tortoise',DRAW.turtle()),130,F.turtle,.65)+on(TAGN('liebre','hare',BODY_OF.Conejo()),280,F.bunny,.6,1)]]},
  {id:'duck',es:'El patito feo',en:'The Ugly Duckling',c:'#e3f2ff',cover:()=>SB.at(SB.swan(),100,100,.9),pages:[
-  ['Mamá pata tenía cinco patitos. Uno era grande y gris.','Mother duck had five ducklings. One was big and gray.',()=>SB.sky()+SB.at(SB.lake(),200,250,2)+on(BODY_OF.Pato(),80,F.duck,.6,0,250)+[160,215,270].map(x=>on(BODY_OF.Pato(),x,F.duck,.3,0,252)).join('')+`<g style="filter:grayscale(1)">${on(BODY_OF.Pato(),345,F.duck,.42,0,252)}</g>`],
-  ['Los demás se burlaban de él y el patito estaba triste.','The others teased him and the duckling was sad.',()=>SB.sky('#d6e4f5')+tree2(60,1)+`<g style="filter:grayscale(1)">${on(BODY_OF.Pato(),210,F.duck,.7)}</g>`+`<path d="M196 ${GY-96} q-4 10 0 14 q4 -4 0 -14Z" fill="#7cc7ff"/>`],
-  ['El patito se fue a recorrer el mundo.','The duckling went off to see the world.',()=>SB.sky()+tree2(70,1.1)+tree2(330,1)+`<g style="filter:grayscale(1)">${on(BODY_OF.Pato(),200,F.duck,.55,1)}</g>`],
-  ['Pasó el invierno y el patito creció.','Winter passed and the duckling grew.',()=>SB.sky('#cfe2f4','#f6fbff')+SB.at(SB.snow(),200,100,2)+`<g style="filter:grayscale(1)">${on(BODY_OF.Pato(),200,F.duck,.8)}</g>`],
+  ['Mamá pata tenía cinco patitos. Uno era grande y gris.','Mother duck had five ducklings. One was big and gray.',()=>SB.sky()+SB.at(SB.lake(),200,250,2)+on(TAGN('pato','duck',BODY_OF.Pato()),80,F.duck,.6,0,250)+[160,215,270].map(x=>on(TAGN('pato','duck',BODY_OF.Pato()),x,F.duck,.3,0,252)).join('')+`<g style="filter:grayscale(1)">${on(TAGN('pato','duck',BODY_OF.Pato()),345,F.duck,.42,0,252)}</g>`],
+  ['Los demás se burlaban de él y el patito estaba triste.','The others teased him and the duckling was sad.',()=>SB.sky('#d6e4f5')+tree2(60,1)+`<g style="filter:grayscale(1)">${on(TAGN('pato','duck',BODY_OF.Pato()),210,F.duck,.7)}</g>`+`<path d="M196 ${GY-96} q-4 10 0 14 q4 -4 0 -14Z" fill="#7cc7ff"/>`],
+  ['El patito se fue a recorrer el mundo.','The duckling went off to see the world.',()=>SB.sky()+tree2(70,1.1)+tree2(330,1)+`<g style="filter:grayscale(1)">${on(TAGN('pato','duck',BODY_OF.Pato()),200,F.duck,.55,1)}</g>`],
+  ['Pasó el invierno y el patito creció.','Winter passed and the duckling grew.',()=>SB.sky('#cfe2f4','#f6fbff')+SB.at(SB.snow(),200,100,2)+`<g style="filter:grayscale(1)">${on(TAGN('pato','duck',BODY_OF.Pato()),200,F.duck,.8)}</g>`],
   ['Al mirarse en el lago… ¡era un hermoso cisne!','When he looked into the lake… he was a beautiful swan!',()=>SB.sky()+SB.at(SB.lake(),200,250,2)+on(SB.swan(),200,F.swan,.95,0,262)+[[90,70],[310,70]].map(([x,y])=>`<polygon points="${starPts5(x,y,14,6)}" fill="#ffd23f"/>`).join('')],
   ['Y encontró una familia de cisnes que lo quiso mucho.','And he found a swan family that loved him very much.',()=>SB.sky()+SB.at(SB.lake(),200,250,2)+on(SB.swan(),110,F.swan,.7,0,262)+on(SB.swan(),220,F.swan,.85,1,264)+on(SB.swan(),320,F.swan,.6,1,262)]]},
- {id:'hen',es:'La gallinita roja',en:'The Little Red Hen',c:'#ffe8e0',cover:()=>SB.at(hen(),100,100,.9),pages:[
-  ['La gallinita roja encontró unos granos de trigo.','The little red hen found some grains of wheat.',()=>SB.sky()+tree2(360,1)+on(hen(),150,F.hen,.75)+[[250,GY-4],[268,GY-8],[262,GY+2]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="6" ry="4" fill="#ffd36a" stroke="${INK}" stroke-width="2"/>`).join('')],
-  ['¿Quién me ayuda a sembrar? Yo no, dijeron el perro, el gato y el pato.','"Who will help me plant?" "Not I," said the dog, the cat and the duck.',()=>SB.sky()+on(hen(),70,F.hen,.55)+on(BODY_OF.Perro(),180,F.quad,.5,1)+on(BODY_OF.Gato(),268,F.quad,.45,1)+on(BODY_OF.Pato(),350,F.duck,.42,1)],
-  ['Así que la gallinita lo sembró solita.','So the little hen planted it all by herself.',()=>SB.sky()+on(hen(),130,F.hen,.7)+`<path d="M220 ${GY} h150" stroke="#8a5a3c" stroke-width="14" stroke-linecap="round"/>${[240,280,320,360].map(x=>`<path d="M${x} ${GY-6} v-12" stroke="#4cc36a" stroke-width="4" stroke-linecap="round"/>`).join('')}`],
-  ['El trigo creció y ella hizo un rico pan.','The wheat grew and she baked a yummy bread.',()=>SB.sky()+on(SB.wheat(),90,F.wheat,.9)+table(270,170)+on(SB.bread(),270,F.bread,.7,0,GY-64)+on(hen(),360,F.hen,.4)],
-  ['¿Quién me ayuda a comer el pan? ¡Yo, yo!, dijeron todos.','"Who will help me eat the bread?" "Me, me!" they all said.',()=>SB.sky()+table(200,150)+on(SB.bread(),200,F.bread,.6,0,GY-64)+on(BODY_OF.Perro(),60,F.quad,.42)+on(BODY_OF.Gato(),340,F.quad,.36,1)+on(BODY_OF.Pato(),110,F.duck,.3)+on(hen(),290,F.hen,.4,1)],
-  ['La próxima vez todos ayudaron y compartieron el pan.','Next time everyone helped, and they shared the bread.',()=>SB.sky()+table(200,150)+on(SB.bread(),200,F.bread,.55,0,GY-64)+on(BODY_OF.Perro(),60,F.quad,.42)+on(BODY_OF.Gato(),340,F.quad,.36,1)+on(BODY_OF.Pato(),110,F.duck,.3)+on(hen(),290,F.hen,.4,1)+`<path transform="translate(182 60) scale(.18)" d="M100 182 C30 136 6 96 30 58 C54 24 94 34 100 70 C106 34 146 24 170 58 C194 96 170 136 100 182 Z" fill="#ff5a7a"/>`]]}
+ {id:'hen',es:'La gallinita roja',en:'The Little Red Hen',c:'#ffe8e0',cover:()=>SB.at(TAGN('gallina','hen',hen()),100,100,.9),pages:[
+  ['La gallinita roja encontró unos granos de trigo.','The little red hen found some grains of wheat.',()=>SB.sky()+tree2(360,1)+on(TAGN('gallina','hen',hen()),150,F.hen,.75)+[[250,GY-4],[268,GY-8],[262,GY+2]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="6" ry="4" fill="#ffd36a" stroke="${INK}" stroke-width="2"/>`).join('')],
+  ['¿Quién me ayuda a sembrar? Yo no, dijeron el perro, el gato y el pato.','"Who will help me plant?" "Not I," said the dog, the cat and the duck.',()=>SB.sky()+on(TAGN('gallina','hen',hen()),70,F.hen,.55)+on(TAGN('perro','dog',BODY_OF.Perro()),180,F.quad,.5,1)+on(TAGN('gato','cat',BODY_OF.Gato()),268,F.quad,.45,1)+on(TAGN('pato','duck',BODY_OF.Pato()),350,F.duck,.42,1)],
+  ['Así que la gallinita lo sembró solita.','So the little hen planted it all by herself.',()=>SB.sky()+on(TAGN('gallina','hen',hen()),130,F.hen,.7)+`<path d="M220 ${GY} h150" stroke="#8a5a3c" stroke-width="14" stroke-linecap="round"/>${[240,280,320,360].map(x=>`<path d="M${x} ${GY-6} v-12" stroke="#4cc36a" stroke-width="4" stroke-linecap="round"/>`).join('')}`],
+  ['El trigo creció y ella hizo un rico pan.','The wheat grew and she baked a yummy bread.',()=>SB.sky()+on(SB.wheat(),90,F.wheat,.9)+table(270,170)+on(SB.bread(),270,F.bread,.7,0,GY-64)+on(TAGN('gallina','hen',hen()),360,F.hen,.4)],
+  ['¿Quién me ayuda a comer el pan? ¡Yo, yo!, dijeron todos.','"Who will help me eat the bread?" "Me, me!" they all said.',()=>SB.sky()+table(200,150)+on(SB.bread(),200,F.bread,.6,0,GY-64)+on(TAGN('perro','dog',BODY_OF.Perro()),60,F.quad,.42)+on(TAGN('gato','cat',BODY_OF.Gato()),340,F.quad,.36,1)+on(TAGN('pato','duck',BODY_OF.Pato()),110,F.duck,.3)+on(TAGN('gallina','hen',hen()),290,F.hen,.4,1)],
+  ['La próxima vez todos ayudaron y compartieron el pan.','Next time everyone helped, and they shared the bread.',()=>SB.sky()+table(200,150)+on(SB.bread(),200,F.bread,.55,0,GY-64)+on(TAGN('perro','dog',BODY_OF.Perro()),60,F.quad,.42)+on(TAGN('gato','cat',BODY_OF.Gato()),340,F.quad,.36,1)+on(TAGN('pato','duck',BODY_OF.Pato()),110,F.duck,.3)+on(TAGN('gallina','hen',hen()),290,F.hen,.4,1)+`<path transform="translate(182 60) scale(.18)" d="M100 182 C30 136 6 96 30 58 C54 24 94 34 100 70 C106 34 146 24 170 58 C194 96 170 136 100 182 Z" fill="#ff5a7a"/>`]]}
 ];
 let story={s:null,p:0};
-function storyNarrate(){const pg=story.s.pages[story.p];const l=L1();say([[l==='es'?pg[0]:pg[1],l]]);}
+const stk=()=>story.tk=(story.tk||0)+1;
+function storyNarrate(){const st=story.s,p=story.p,tk=stk(),pg=st.pages[p],l=L1();say([[l==='es'?pg[0]:pg[1],l]],()=>storyAuto(st,p,tk,1500));}
+function storyAuto(st,p,tk,ms){setTimeout(()=>{if(current==='stories'&&story.s===st&&story.p===p&&story.tk===tk)storyNext();},ms);}
+function storyName(g){const st=story.s,p=story.p,tk=stk(),n=g.dataset.n.split('|');g.classList.remove('pop');try{g.getBoundingClientRect();}catch(e){}g.classList.add('pop');say(seqOf(capF(n[0])+'!',capF(n[1])+'!'),()=>storyAuto(st,p,tk,4000));}
+function storyNext(){const st=story.s;if(story.p<st.pages.length-1){story.p++;glide('sine',500,800,.15,.15);storyPage();}else{const tk=stk(),l2=L1();say([[l2==='es'?'Y colorín colorado, este cuento se ha acabado.':'The end.',l2]]);const endP=story.p;setTimeout(()=>{if(current==='stories'&&story.s===st&&story.p===endP&&story.tk===tk)renderStories();},3800);}}
 function storyPage(){
   const st=story.s,pg=st.pages[story.p],l=L1();
   const z=$('qzone');z.className='gridzone story';
@@ -3889,9 +3899,9 @@ function storyPage(){
    <div class="sdots">${st.pages.map((_,i)=>`<i class="${i===story.p?'on':''}"></i>`).join('')}</div>
    <button class="sbtn snext" aria-label="${pair('Siguiente','Next')[0]}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>`;
   $('qword').hidden=true;$('gtools').hidden=true;
-  tap(z.querySelector('.sill'),storyNarrate,{gap:600});
+  tap(z.querySelector('.sill'),e=>{const g=e&&e.target&&e.target.closest?e.target.closest('[data-n]'):null;if(g)storyName(g);else if(!talking())storyNarrate();},{gap:350,always:true});
   tap(z.querySelector('.sprev'),()=>{if(story.p>0){story.p--;glide('sine',700,500,.15,.15);storyPage();}},{gap:500});
-  tap(z.querySelector('.snext'),()=>{if(story.p<st.pages.length-1){story.p++;glide('sine',500,800,.15,.15);storyPage();}else{const l2=L1();say([[l2==='es'?'Y colorín colorado, este cuento se ha acabado.':'The end.',l2]]);const endP=story.p;setTimeout(()=>{if(current==='stories'&&story.s===st&&story.p===endP)renderStories();},3800);}},{gap:500});
+  tap(z.querySelector('.snext'),storyNext,{gap:500});
   $('qback').hidden=false;
   setTimeout(()=>{if(current==='stories'&&story.s===st)storyNarrate();},350);
 }
@@ -5447,7 +5457,7 @@ show('splash');
 
 <script>
 (function(){var nat=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
-if(!nat&&'serviceWorker' in navigator&&/^https?:/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=11f5dcb05f').catch(function(){});});}})();
+if(!nat&&'serviceWorker' in navigator&&/^https?:/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=9e671c9603').catch(function(){});});}})();
 </script>
 </body>
 </html>
