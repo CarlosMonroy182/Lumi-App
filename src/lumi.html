@@ -529,9 +529,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .csp svg{width:100%;height:100%;display:block}
 
 /* botón mágico */
-.gtools:has(#magicBtn:not([hidden])):has(#gameBtn:not([hidden])) #gprog{gap:2px}
-.gtools:has(#magicBtn:not([hidden])):has(#gameBtn:not([hidden])) #gprog svg{width:19px;height:19px}
-@container lumi (max-width:360px){.gtools:has(#magicBtn:not([hidden])) .gbtn{width:52px;height:52px}}
+.gtools.magon.gameon #gprog{gap:2px}
+.gtools.magon.gameon #gprog svg{width:19px;height:19px}
+@container lumi (max-width:360px){.gtools.magon .gbtn{width:52px;height:52px}}
 .zspin{animation:spin 9s linear infinite}
 .gtools.ingame #magicBtn,.gtools.ingame #gameBtn{opacity:.5;filter:saturate(.5)}
 .gbtn.magicb{position:relative;background:linear-gradient(135deg,#fff3b0,#ffd23f 55%,#ffb02e);color:#fff;box-shadow:0 5px 0 #d99a10,0 0 16px rgba(255,210,63,.55)}
@@ -838,10 +838,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #rest p{font-family:var(--display);font-weight:600;font-size:clamp(20px,5cqw,28px);margin:0;color:var(--purple-soft)}
 
 #pwrap{position:absolute;left:0;right:0;bottom:0;height:var(--dock);padding:0 14px env(safe-area-inset-bottom,0px);box-sizing:border-box;z-index:9;display:flex;flex-direction:row;justify-content:flex-end;align-items:center;gap:12px}
-#app:has(#pwrap:not([hidden]))::before{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--dock);background:#fffdf7;border-radius:24px 24px 0 0;box-shadow:0 -3px 0 rgba(62,42,134,.08)}
+#app.dockon::before{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--dock);background:#fffdf7;border-radius:24px 24px 0 0;box-shadow:0 -3px 0 rgba(62,42,134,.08)}
 #app{--dock:calc(80px + env(safe-area-inset-bottom,0px))}
-#app:has(#pwrap:not([hidden])) .screen{bottom:var(--dock)}
-#app:has(#pwrap:not([hidden])) .gtools{position:fixed;top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
+#app.dockon .screen{bottom:var(--dock)}
+#app.dockon .gtools{position:fixed;top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
 #pwrap #kidHome{order:2}
 #pwrap .hold{order:-1}
 #pwrap{pointer-events:none}
@@ -1216,6 +1216,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 <script>
 (function(){
+if(!Array.prototype.flatMap)Object.defineProperty(Array.prototype,'flatMap',{configurable:true,writable:true,value:function(f,t){return [].concat.apply([],this.map(f,t));}});
+if(!Object.fromEntries)Object.fromEntries=function(a){const o={};Array.from(a).forEach(p=>{o[p[0]]=p[1];});return o;};
 const T={
  es:{start:'Empezar',lPrimary:'Idioma principal',ob1h:'¿Cómo le dices a tu peque?',ob1p:'Lumi lo saludará por su nombre. Puedes dejarlo vacío.',ph:'Ej. Sofi',
   ob2h:'Elige su etapa',ob2p:'Cada etapa muestra las mismas secciones con ejercicios a su nivel. Puedes cambiarla cuando quieras.',
@@ -1510,7 +1512,7 @@ function applyUI(){
   $('pTimer').value=String(S.timer);
   $('pRot').innerHTML=[0,2,3,5,10,15].map(m=>`<option value="${m}">${m?m+' min':t('rotNone')}</option>`).join('');$('pRot').value=String(S.rot||0);
   $('pErase').innerHTML=[0,5,10].map(x=>`<option value="${x}">${x?(S.primary==='en'?'After '+x+' seconds':'A los '+x+' segundos'):t('eNever')}</option>`).join('');$('pErase').value=String(S.erase||0);
-  $('pHome').innerHTML=[0,2,3,5,10].map(x=>`<option value="${x}">${x?t('hAfter')+' '+x+' min':t('hAlways')}</option>`).join('');$('pHome').value=String(S.homeMin??0);
+  $('pHome').innerHTML=[0,2,3,5,10].map(x=>`<option value="${x}">${x?t('hAfter')+' '+x+' min':t('hAlways')}</option>`).join('');$('pHome').value=String(S.homeMin==null?0:S.homeMin);
   $('pObj').innerHTML=`<option value="">${t('rnd')}</option>`+NOBJS.map((o,i)=>{const n=S.primary==='en'?o.en:o.es;return `<option value="${i}">${n[0].toUpperCase()+n.slice(1)}</option>`;}).join('');
   $('pObj').value=String(S.nobj);
   if(!$('onboard').hidden)renderOb();
@@ -1594,7 +1596,8 @@ const VSET=new Set('001a3673 003e3eb0 003f93b5 0052420c 005304bd 006c2fe7 006f62
 const ASFX={"Vaca": "vaca.mp3", "Perro": "perro.mp3", "Gato": "gato.mp3", "Pato": "pato.mp3", "Cerdo": "cerdo.mp3", "Oveja": "oveja.mp3", "Pez": "pez.mp3", "Tucán": "tucan.mp3", "Tigre": "tigre.mp3", "Oso": "oso.mp3", "Oso polar": "oso.mp3", "Serpiente": "serpiente.mp3", "Búho": "buho.mp3", "Ardilla": "ardilla.mp3", "Foca": "foca.mp3", "Caballo": "caballo.mp3", "Gallina": "gallina.mp3", "Burro": "burro.mp3", "León": "leon.mp3", "Mono": "mono.mp3", "Rana": "rana.mp3", "Elefante": "elefante.mp3", "Ballena": "ballena.mp3", "Zorro": "zorro.mp3", "Pingüino": "pinguino.mp3"};
 function vh(s){let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0;}return('0000000'+x.toString(16)).slice(-8);}
 function clipOf(it){const o=it[2]||{};if(o.sfx)return 'a3s/'+o.sfx;const b=it[1]+'|'+String(it[0]).replace(/\s+/g,' ').trim();if(o.emo){const e=vh(b+'|'+o.emo);if(VSET.has(e))return 'v/'+e+'.mp3';}const k=vh(b);return VSET.has(k)?'v/'+k+'.mp3':null;}
-let clipA=null,clipGen=0;
+let clipA=null,clipGen=0,clipEl=null;
+function clipNew(src){if(!clipEl){clipEl=new Audio();clipEl.preload='auto';}const a=clipEl;a.onended=a.onerror=a.onpause=a.onloadedmetadata=null;try{a.pause();}catch(e){}a.src=src;return a;}
 function stopClip(){clipGen++;const a=clipA;clipA=null;if(a){try{a.onended=a.onerror=a.onpause=a.onloadedmetadata=null;a.pause();}catch(e){}}}
 function playChain(seq,onEnd){
   const g=++clipGen;speakFin=null;lastSpeak=Date.now();
@@ -1604,7 +1607,7 @@ function playChain(seq,onEnd){
     const it=seq[i],src=clipOf(it),next=()=>{if(g===clipGen)step(i+1);};
     if(!src){clipA=null;if(synth)speakNow([[it[0],it[1],it[2]]],next);else setTimeout(next,300);return;}
     talkTill=Date.now()+9000;lastSpeak=Date.now();
-    const a=new Audio(src);clipA=a;if(!(it[2]&&it[2].sfx)){a.playbackRate=Math.max(.5,Math.min(2,S.rate||1));}
+    const a=clipNew(src);clipA=a;if(!(it[2]&&it[2].sfx)){a.playbackRate=Math.max(.5,Math.min(2,S.rate||1));}
     let done=false;const fin=ok=>{if(done)return;done=true;if(g!==clipGen)return;if(!ok&&!(it[2]&&it[2].sfx)&&synth){clipA=null;speakNow([[it[0],it[1],it[2]]],next);return;}next();};
     a.onended=()=>fin(true);a.onerror=()=>fin(false);a.onpause=()=>{if(a.duration&&a.currentTime>=a.duration-.08)fin(true);};
     a.onloadedmetadata=()=>{if(isFinite(a.duration))setTimeout(()=>{if(clipA===a)fin(true);},a.duration/(a.playbackRate||1)*1000+700);};
@@ -4000,7 +4003,7 @@ function quad(face,o){
   return `${TAILS[o.tail||'thin'](c,o.tc)}${LEGS(lx,legc,128,186,lw)}${o.hoof?lx.map(x=>`<rect x="${x}" y="178" width="${lw}" height="8" rx="3" fill="${o.hoof}"/>`).join(''):''}${body}${extra}${neck}<g transform="translate(${o.hx||0} ${hy}) scale(${hs})">${face()}</g>`;
 }
 function bird(face,o){
-  return `${o.legs?`<path d="M104 160 V186 M128 160 V186 M96 186 H112 M120 186 H136" stroke="#ffb02e" stroke-width="6" stroke-linecap="round"/>`:''}<path d="M168 112 L196 92 L192 132 Z" fill="${o.c2||o.c}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><ellipse cx="120" cy="128" rx="58" ry="40" fill="${o.c}" stroke="${INK}" stroke-width="4"/><path d="M108 112 Q140 100 162 126 Q132 148 108 112 Z" fill="${o.c2||o.c}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><path d="M66 84 Q60 112 76 124 L100 118 Q92 100 96 84 Z" fill="${o.c}"/>${o.water?`<path d="M30 160 Q60 150 90 160 T150 160 T210 160" stroke="#7cc7ff" stroke-width="7" fill="none" stroke-linecap="round"/>`:''}<g transform="translate(${o.hx??22} ${o.hy??30}) scale(${o.hs||.52})">${face()}</g>`;
+  return `${o.legs?`<path d="M104 160 V186 M128 160 V186 M96 186 H112 M120 186 H136" stroke="#ffb02e" stroke-width="6" stroke-linecap="round"/>`:''}<path d="M168 112 L196 92 L192 132 Z" fill="${o.c2||o.c}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><ellipse cx="120" cy="128" rx="58" ry="40" fill="${o.c}" stroke="${INK}" stroke-width="4"/><path d="M108 112 Q140 100 162 126 Q132 148 108 112 Z" fill="${o.c2||o.c}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/><path d="M66 84 Q60 112 76 124 L100 118 Q92 100 96 84 Z" fill="${o.c}"/>${o.water?`<path d="M30 160 Q60 150 90 160 T150 160 T210 160" stroke="#7cc7ff" stroke-width="7" fill="none" stroke-linecap="round"/>`:''}<g transform="translate(${o.hx==null?22:o.hx} ${o.hy==null?30:o.hy}) scale(${o.hs||.52})">${face()}</g>`;
 }
 const BODY_OF={
  'Vaca':()=>quad(AF('Vaca').body,{c:'#fff',spots:1,tail:'tuft',hoof:'#5b5560',hs:.6,hy:8}),
@@ -5466,5 +5469,7 @@ try{const CA=capPlugin('App');
 applyUI();
 watchWords();
 show('splash');
+{const ap=$('app'),gs=$('gtools'),sync=()=>{ap.classList.toggle('dockon',!$('pwrap').hidden);gs.classList.toggle('magon',!$('magicBtn').hidden);gs.classList.toggle('gameon',!$('gameBtn').hidden);};const mo=new MutationObserver(sync);['pwrap','magicBtn','gameBtn'].forEach(i=>mo.observe($(i),{attributes:true,attributeFilter:['hidden']}));sync();}
+window.__lumiOK=1;
 })();
 </script>

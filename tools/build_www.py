@@ -12,6 +12,11 @@ fonts='<style>'+''.join([ff('Grandstander',600,'grandstander-latin-600-normal.wo
   ff('Atkinson Hyperlegible',400,'atkinson-hyperlegible-latin-400-normal.woff2'),ff('Atkinson Hyperlegible',700,'atkinson-hyperlegible-latin-700-normal.woff2')])+'</style>'
 h=re.sub(r'<link rel="preconnect"[^>]*>\s*','',h)
 h=re.sub(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com[^>]*>',fonts,h)
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from legacy_css import wrap
+leg=wrap(''.join(re.findall(r'<style>([\s\S]*?)</style>',h)))
+if leg:
+  k=h.rfind('</style>')+len('</style>');h=h[:k]+'\n<style>'+leg+'</style>'+h[k:]
 title=re.search(r'<title>.*?</title>',h).group(0);h=h.replace(title,'',1)
 ver=hashlib.sha1(h.encode()).hexdigest()[:10]
 head=f'''<!doctype html>
@@ -29,6 +34,13 @@ head=f'''<!doctype html>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>[hidden]{{display:none!important}}html,body{{background:#fff8ef}}</style>
+<script>
+(function(){{var errs=[];window.addEventListener('error',function(e){{errs.push((e&&e.message)||'error');}});
+setTimeout(function(){{if(window.__lumiOK)return;var m=navigator.userAgent.match(/Chrome\\/(\\d+)/),esc=function(s){{return String(s).replace(/[&<>]/g,function(c){{return {{'&':'&amp;','<':'&lt;','>':'&gt;'}}[c];}});}};
+var d=document.createElement('div');d.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff8ef;color:#c0392b;font:18px/1.5 sans-serif;padding:24px;overflow:auto';
+d.innerHTML='<b>Lumi no pudo iniciar en este dispositivo.</b><br><br>Versi&oacute;n del navegador interno (WebView): '+(m?m[1]:'?')+'<br>Abre Play Store, actualiza &laquo;Android System WebView&raquo; y &laquo;Google Chrome&raquo; y vuelve a abrir Lumi.<br><br><small>'+errs.map(esc).join('<br>')+'</small>';
+document.body.appendChild(d);}},8000);}})();
+</script>
 </head>
 <body>
 '''+('<script>window.LUMI_TESTER=1</script>\n' if TESTER else '')
